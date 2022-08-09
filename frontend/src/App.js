@@ -6,15 +6,20 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from "timeago.js";
+import Register from "./components/Register";
+import Login from "./components/Login";
 
 function App() {
-	const currentUser = "Nhi";
+	const myStorage = window.localStorage;
+	const [currentUser, setCurrentUser] = useState(myStorage.getItem("user"));
 	const [pins, setPins] = useState([]);
 	const [currentPlaceId, setCurrentPlaceId] = useState(null);
 	const [newPlace, setNewPlace] = useState(null);
 	const [title, setTitle] = useState(null);
 	const [desc, setDesc] = useState(null);
 	const [rating, setRating] = useState(0);
+	const [showRegister, setShowRegister] = useState(false);
+	const [showLogin, setShowLogin] = useState(false);
 	const [viewport, setViewport] = useState({
 		latitude: 47.2529,
 		longitude: -122.4443,
@@ -38,11 +43,15 @@ function App() {
 	};
 
 	const handleAddClick = (e) => {
-		const { lat, lng } = e.lngLat;
-		setNewPlace({
-			lat: lat,
-			long: lng,
-		});
+		if (!currentUser) {
+			alert("Please login first");
+		} else {
+			const { lat, lng } = e.lngLat;
+			setNewPlace({
+				lat: lat,
+				long: lng,
+			});
+		}
 	};
 
 	const handleSubmit = async (e) => {
@@ -61,6 +70,11 @@ function App() {
 			setPins([...pins, res.data]);
 			setNewPlace(null);
 		} catch (err) {}
+	};
+
+	const handleLogout = () => {
+		myStorage.removeItem("user");
+		setCurrentUser(null);
 	};
 
 	return (
@@ -149,6 +163,31 @@ function App() {
 							</form>
 						</div>
 					</Popup>
+				)}
+				{currentUser ? (
+					<button className="button logout" onClick={handleLogout}>
+						Log Out
+					</button>
+				) : (
+					<div className="buttons">
+						<button className="button login" onClick={() => setShowLogin(true)}>
+							Login
+						</button>
+						<button
+							className="button register"
+							onClick={() => setShowRegister(true)}
+						>
+							Register
+						</button>
+					</div>
+				)}
+				{showRegister && <Register setShowRegister={setShowRegister} />}
+				{showLogin && (
+					<Login
+						setShowLogin={setShowLogin}
+						myStorage={myStorage}
+						setCurrentUser={setCurrentUser}
+					/>
 				)}
 			</ReactMapGL>
 		</div>
